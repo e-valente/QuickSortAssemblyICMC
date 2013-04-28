@@ -18,145 +18,145 @@ vec2: var #40
 main:
 
 	;constroi vetor
-	call SetVector
-
+	call SetVector  ;cria o vetor e retorna em r7 seu tamanho
+	push r7         ;guardamos na pilha seu tamanho
 	
-	
-	
-
-	
-	;executa partition
+	;executa quicksort
 	loadn r0, #vec1
 	loadn r1, #0
-	loadn r2, #4
-	call QuickSort
+	pop r2       	 ;r2 agora tem o tamanho do vetor
+	push r2     	 ;empilha o tamanho do vetor pra ser usado no futuro      
+	dec r2           ;decrementamos de 1, pois o quicksort conta o elemento de indice zero
+	;loadn r2, #21   ;descomente essa instrucao pra rotina gerar um erro (max elem permitidos)
+	call QuickSort    ;r0->vector, r1->left, r2->right  retorna vetor ordenado em r7
 	
 	push r7          ;guarda endereco do vetor ordenado
 	
 	
 	
-	;imprime primeira msg
+	;imprime primeira msg (vetor desordenado)
 	loadn r1, #msg1
-	loadn r0, #0
+	loadn r0, #0          ;r0 recebe posicao da tela
 	call ImprimeString    ;r1->posicao inicial da string, r0-> posicao inicial da tela, devolve r6 com ultima posicao impressa
 
 	
-	;imprime vetor
+	;imprime vetor (desordenado)
 	loadn r0, #vec1
-	loadn r1, #5
-	loadn r2, #40
+	pop r6              ;desimpilha o endereco do vetor ordenado (nao nos interessa)
+	pop r1              ;desimpilha o tamanho do vetor
+	push r1             ;empilha o tamanho do vetor 
+	push r6             ;empilha a posicao do vetor ordenado
+	loadn r2, #40         ;posica da tela
 	call PrintVector  ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
 	
-	
 		
-	;imprime segunda msg
+	;imprime segunda msg (vetor ordenado)
 	loadn r1, #msg2
-	loadn r0, #240
+	loadn r0, #240        ;posicao da tela
 	call ImprimeString    ;r1->posicao inicial da string, r0-> posicao inicial da tela, devolve r6 com ultima posicao impressa
 	
 	
 	;imprime vetor ordenado
 	;imprime vetor
 	pop r0             ;recebe da pilha o endereco do vetor ordenado (retornado pelo qsort())
-	loadn r1, #5
+	pop r1		   ;recebe da pilha o tamanho do vetor
+	push r1		   ;guardamos seu tamanho pra uso futuro
+	push r0		   ;guardamos o endereco do vetor ordenado para uso futuro
 	loadn r2, #280
 	call PrintVector  ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
 	
+	pop r1             ;como temos 2 palavras na pilha, desimpilhamos pra ficar
+	pop r1             ;tudo ok!
 	
-	halt
+	halt		   ;(encerra execucao do programa)
 	
-	
-;*********************************SET VECTOR***************************/
-SetVector:
 
-  push r0
-  push r1
+;*********************************SET VECTOR ***************************/
+SetVector:   ;cria o vetor e retorna em r7 seu tamanho
 
-  loadn r0, #vec1
-  loadn r1, #5   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
+  loadn r7, #0         ;contador do nro de elementos
   
-  inc r0
-  loadn r1, #4   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
-  
-  inc r0
-  loadn r1, #3   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
-  
-  inc r0
-  loadn r1, #2   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
-  
-  inc r0
-  loadn r1, #1   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
-  
-  
-  
-  pop r1
-  pop r0
-  
- 
+  static vec1 + #0, #5   ;armazena 5 na posicao 0 (zero) do vetor
+  inc r7                 ;incrementa contador de elementos
+  static vec1 + #1, #4   ;armazena 4 na posicao 1 (zero) do vetor and so forth
+  inc r7
+  static vec1 + #2, #5
+  inc r7
+  static vec1 + #3, #9
+  inc r7
+  static vec1 + #4, #1
+  inc r7
+  static vec1 + #5, #8
+  inc r7
+  static vec1 + #6, #3
+  inc r7
+  static vec1 + #7, #7
+  inc r7
+  static vec1 + #8, #2
+  inc r7
+  static vec1 + #9, #3
+  inc r7
+  static vec1 + #10, #1
+  inc r7
+  static vec1 + #11, #6
+  inc r7
   
   rts
-  
-  
-  
-  
+    
 ;****************************QUICKSORT*****************************************
 QuickSort: ;r0->vector, r1->left, r2->right  retorna vetor ordenado em r7
 ;r3 = cuttof
 
 
   ;*****verifica se não ultrapassou os limites (20)
-  push r1
-  push r2
+  push r1               ;empilhamos left
+  push r2               ;empilhamos right
   ;obtem o tamanho do vetor
-  sub r1, r2, r1
-  inc r1
-  loadn r2, #20
+  sub r1, r2, r1        ;tamanho = right = left
+  inc r1                ;tamanho-- (quicksort conta o elemento de indice zero) 
+  loadn r2, #20         ;r2 será usada pra verificao do tamanho max do vetor
   cmp r1, r2
-  ceg ImprimeVetorInvalido
+  ceg ImprimeVetorInvalido  ;se ultrapassar o tamanho max, imprime msg e encerra execucao
   
-  pop r2
-  pop r1
+  pop r2                 ;desimpilhamos right
+  pop r1                 ;desimpilhamos left
   ;******fim da verificao da ultrapassagem dos limites
   
   
 
  ;****copia vetor*****************
-  push r1
-  push r2
+  push r1                ;empilhamos left
+  push r2                ;empilhamos right
   
-  loadn r0, #vec1
+  loadn r0, #vec1        ;r0 será a posicao do vetor de origem
   ;obtem o tamanho do vetor
-  sub r1, r2, r1
+  sub r1, r2, r1         ;r1 terá o tamanho do vetor
   inc r1
-  loadn r2, #vec2
+  loadn r2, #vec2         ;r2 posicao do vetor destino
   call Vectorcpy  ;copia o vetor-> r0->vector1, r1->length r2->vetor destino
-  mov r3, r2
   
-  pop r2
-  pop r1
+  mov r3, r2              ;r2 recebe uma copia (bk) do tamanho do vetor
+  
+  pop r2                  ;desimpilhamos right (pra ser usado no quicksort)              
+  pop r1                  ;desimpilhamos left  (pra ser usado no quicksort) 
   ;pop r0
   ;*******fim da copia do vetor***
   
-  mov r0, r3        ;r0 recebe endereco do novo vetor
+  mov r0, r3                   ;r0 recebe endereco do novo vetor
 
   
 
-QuickSort_in:
+QuickSort_in:                  ;rotina que será recursiva
   loadn r4, #0
   
-  cmp r2, r1
-  jgr QuickSort_ExecLeftRight
-  rts
+  cmp r2, r1                  ;compara se right > left
+  jgr QuickSort_ExecLeftRight ;caso seja, executa o quicksort_in dos 2 "lados" do vetor
+  rts                          ; da rotina QuickSort_in
   
 
 QuickSort_ExecLeftRight:
-  call Partition    ;r0->vector, r1->left, r2->right  
-  mov r3, r7
+  call Partition    ;r0->vector, r1->left, r2->right; retorna cuttof em r7
+  mov r3, r7        ;r3 tem o cuttof retornado pela partition
   
   ;quicksort(vector, left, cuttof -1);
   push r2        ;usaremos r2 no quicksort
@@ -184,7 +184,7 @@ QuickSort_out:
   
   
 
-Partition: ;r0->vector, r1->left, r2->right  
+Partition: ;r0->vector, r1->left, r2->right; retorna cuttof em r7
 ;r3->i
 ;r4->j
 ;r6->vect[left]
