@@ -51,7 +51,7 @@ main:
 		
 	;imprime segunda msg
 	loadn r1, #msg2
-	loadn r0, #120
+	loadn r0, #240
 	call ImprimeString    ;r1->posicao inicial da string, r0-> posicao inicial da tela, devolve r6 com ultima posicao impressa
 	
 	
@@ -59,7 +59,7 @@ main:
 	;imprime vetor
 	pop r0             ;recebe da pilha o endereco do vetor ordenado (retornado pelo qsort())
 	loadn r1, #5
-	loadn r2, #160
+	loadn r2, #280
 	call PrintVector  ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
 	
 	
@@ -275,18 +275,22 @@ PrintVector:   ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
   loadn r4, #','  ;espaco que servira como separador entre os elementos
   loadn r5, #0    ;r5 -> contador: conta os elementos que estao sendo impressos
   loadn r6, #48   ;correcao para imprimir o numero como caracter, pois 0 = 48
+  loadn r7, #' '  ;espaco pra tirar a virgula da ultima posicao do vetor
 
 PrintVector_Loop:
   loadi r3, r0    ;carrega conteudo de r0 em r3 (r0 é ponteiro pro vetor)
   add r3, r3, r6  ;soma 48 pra imprimir como caractere
   outchar r3, r2  ;imprime o caractere
   inc r2          ;incrementa posicao da tela
-  outchar r4, r2  ;imprime espaco
+  outchar r4, r2  ;imprime virgula
   inc r0	  ;incrementa posicao do vetor
   inc r2          ;incrementa posicao da tela
   inc r5          ;incrementa contador dos elementos impressos
   cmp r5, r1      ;compara se nao chegou ao fim do vetor
   jne PrintVector_Loop ;se nao chegou ao fim continua imprimindo
+  
+  dec r2          ;decrementa posicao da tela
+  outchar r7, r2  ;imprime imprime espaco depois da ultima posicao
   
   rts
 
