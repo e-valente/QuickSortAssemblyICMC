@@ -24,7 +24,7 @@ main:
 	
 	;imprime vetor
 	loadn r0, #vec1
-	loadn r1, #8
+	loadn r1, #5
 	loadn r2, #40
 	call PrintVector  ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
 	
@@ -42,17 +42,18 @@ main:
 	call ImprimeString    ;r1->posicao inicial da string, r0-> posicao inicial da tela, devolve r6 com ultima posicao impressa
 	
 	
-	;ordena com bubblesort
-	;loadn r0, #vec1
-	;loadn r1, #8
-	;call Bubble_Sort
+	;executa partition
+	loadn r0, #vec1
+	loadn r1, #0
+	loadn r2, #4
+	call Partition
 	
 	;imprime vetor trocado
 	;imprime vetor
-	;loadn r0, #vec1
-	;loadn r1, #8
-	;loadn r2, #160
-	;call PrintVector  ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
+	loadn r0, #vec1
+	loadn r1, #5
+	loadn r2, #160
+	call PrintVector  ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
 	
 	
 	halt
@@ -65,27 +66,11 @@ SetVector:
   push r1
 
   loadn r0, #vec1
-  loadn r1, #7   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
-  
-  inc r0
   loadn r1, #5   ;carrega r1 com o valor #x
   storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
   
   inc r0
-  loadn r1, #9   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
-  
-  inc r0
-  loadn r1, #2   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
-  
-  inc r0
-  loadn r1, #9   ;carrega r1 com o valor #x
-  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
-  
-  inc r0
-  loadn r1, #1   ;carrega r1 com o valor #x
+  loadn r1, #4   ;carrega r1 com o valor #x
   storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
   
   inc r0
@@ -93,8 +78,13 @@ SetVector:
   storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
   
   inc r0
-  loadn r1, #4   ;carrega r1 com o valor #x
+  loadn r1, #2   ;carrega r1 com o valor #x
   storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
+  
+  inc r0
+  loadn r1, #1   ;carrega r1 com o valor #x
+  storei r0, r1 ;armazina o conteudo de r1 na memoria apontada por r0
+  
   
   
   pop r1
@@ -108,6 +98,91 @@ SetVector:
   
   
 ;****************************QUICKSORT*****************************************
+Partition: ;r0->vector, r1->left, r2->right  
+;r3->i
+;r4->j
+;r6->vect[left]
+;r5->vect[j]
+;r7->tmp
+
+  push r3
+  push r4
+  push r5
+  push r6
+
+  ;r3 = i
+  mov r3, r1   ;r3 = i, i = left
+  
+
+  ;j = left+1
+  ;r4 = j
+  mov r4, r1   ;r4 = j = left 
+  inc r4       ;r4 = j++
+  
+LoopPartition:
+
+  ;obtem v[left], que será armazenado 
+  ;em r6
+  add r7, r0, r1    ;r7 = &vect[left]
+  loadi r6, r7      ;r6 = vect[left]
+  
+  ;obtem v[j], que será armazenado em
+  ;r5
+  add r7, r0, r4    ;r7 = &vect[j]
+  loadi r5, r7      ;r5 = vect[j]
+  
+  ;if(vector[left] > vector[j]) 
+  cmp r6, r5       
+  jgr IncSwapPartition_in
+  
+IncSwapPartition_out:
+
+  ;condicao pra iteracao do laco
+  ;se j <= right => loop
+  inc r4           ;j++
+  cmp r4, r2
+  jel LoopPartition
+  
+  ;executa o swap fora do laco
+  ;swap(vector, left, i);
+  push r2             ;preciso usar r2 na swap
+  mov r2, r3          ;r2 = i
+  call SwapVectorElement  ;r0->vec, r1->left, r2->i
+  pop r2
+  
+  jmp Partition_final
+
+  
+IncSwapPartition_in:
+  inc r3
+  
+  push r1
+  push r2
+  
+  mov r1, r3
+  mov r2, r4
+  
+  call SwapVectorElement 
+  
+  pop r2
+  pop r1
+  
+  jmp IncSwapPartition_out
+  
+  
+Partition_final:
+  ;retorna i (em r7)
+  mov r7, r3
+  
+  pop r6
+  pop r5
+  pop r4
+  pop r3
+  
+  
+  rts
+  
+
 
 
 ;****************************BUBBLE_SORT*****************************************
