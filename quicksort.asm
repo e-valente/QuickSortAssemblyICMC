@@ -4,12 +4,15 @@ jmp main
 
 msg1: string "Vetor sem ordenar: "
 msg2: string "Vetor ordenado: "
+msg3: string "Vetor invalido! (max 20 elementos)"
 ;msg1: string "Digite a primeira string: "
 ;msg2: string "Digite a segunda string: "
 ;msg3: string "Resultado: "
 ;str1: var #40
 str2: var #40
-vec1: var #20
+vec1: var #40
+vec2: var #40
+
 
 
 main:
@@ -17,10 +20,26 @@ main:
 	;constroi vetor
 	call SetVector
 
+	
+	
+	
+
+	
+	;executa partition
+	loadn r0, #vec1
+	loadn r1, #0
+	loadn r2, #4
+	call QuickSort
+	
+	push r7          ;guarda endereco do vetor ordenado
+	
+	
+	
 	;imprime primeira msg
 	loadn r1, #msg1
 	loadn r0, #0
 	call ImprimeString    ;r1->posicao inicial da string, r0-> posicao inicial da tela, devolve r6 com ultima posicao impressa
+
 	
 	;imprime vetor
 	loadn r0, #vec1
@@ -29,28 +48,16 @@ main:
 	call PrintVector  ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
 	
 	
-	;troca posicao
-	;r0->vector, r1->pos1, r2->pos2
-	;loadn r0, #vec1
-	;loadn r1, #0
-	;loadn r2, #6
-	;call SwapVectorElement
-	
-	;imprime primeira msg
+		
+	;imprime segunda msg
 	loadn r1, #msg2
 	loadn r0, #120
 	call ImprimeString    ;r1->posicao inicial da string, r0-> posicao inicial da tela, devolve r6 com ultima posicao impressa
 	
 	
-	;executa partition
-	loadn r0, #vec1
-	loadn r1, #0
-	loadn r2, #4
-	call Partition
-	
-	;imprime vetor trocado
+	;imprime vetor ordenado
 	;imprime vetor
-	loadn r0, #vec1
+	pop r0             ;recebe da pilha o endereco do vetor ordenado (retornado pelo qsort())
 	loadn r1, #5
 	loadn r2, #160
 	call PrintVector  ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
@@ -98,6 +105,85 @@ SetVector:
   
   
 ;****************************QUICKSORT*****************************************
+QuickSort: ;r0->vector, r1->left, r2->right  retorna vetor ordenado em r7
+;r3 = cuttof
+
+
+  ;*****verifica se não ultrapassou os limites (20)
+  push r1
+  push r2
+  ;obtem o tamanho do vetor
+  sub r1, r2, r1
+  inc r1
+  loadn r2, #20
+  cmp r1, r2
+  ceg ImprimeVetorInvalido
+  
+  pop r2
+  pop r1
+  ;******fim da verificao da ultrapassagem dos limites
+  
+  
+
+ ;****copia vetor*****************
+  push r1
+  push r2
+  
+  loadn r0, #vec1
+  ;obtem o tamanho do vetor
+  sub r1, r2, r1
+  inc r1
+  loadn r2, #vec2
+  call Vectorcpy  ;copia o vetor-> r0->vector1, r1->length r2->vetor destino
+  mov r3, r2
+  
+  pop r2
+  pop r1
+  ;pop r0
+  ;*******fim da copia do vetor***
+  
+  mov r0, r3        ;r0 recebe endereco do novo vetor
+
+  
+
+QuickSort_in:
+  loadn r4, #0
+  
+  cmp r2, r1
+  jgr QuickSort_ExecLeftRight
+  rts
+  
+
+QuickSort_ExecLeftRight:
+  call Partition    ;r0->vector, r1->left, r2->right  
+  mov r3, r7
+  
+  ;quicksort(vector, left, cuttof -1);
+  push r2        ;usaremos r2 no quicksort
+  mov r2, r3     ;r2 <- r3 (cuttof)
+  dec r2         ;cuttof -1
+  call QuickSort_in      ;r0->vector, r1->left, r2-> cuttof -1
+  pop r2
+  
+  ;quicksort(vector, cuttof +1, right);
+  push r1        ;usaremos r1 no quicksort
+  mov r1, r3     ;r1 <- r3 (cuttof)
+  inc r1         ;cuttof +1
+  call QuickSort_in      ;r0->vector, r1->cuttof +1, r2-> right
+  pop r1
+ 
+ 
+QuickSort_out:
+
+  mov r7, r0   ;retornamos o endereco do vetor ordenado em r7
+     
+ rts
+ 
+ 
+  
+  
+  
+
 Partition: ;r0->vector, r1->left, r2->right  
 ;r3->i
 ;r4->j
@@ -182,78 +268,11 @@ Partition_final:
   
   rts
   
-
-
-
-;****************************BUBBLE_SORT*****************************************
-Bubble_Sort:  ;r0->vector, r1->size_vector
-  
-  push r2
-  push r3
-  push r4
-  push r5
-  push r6
-  
-  loadn r6, #0  ;contador do laco externo
- 
-  
-Bubble_Sort_Out_Loop: ;loop externo
-
- mov r5, r1    ;contador do laco interno
- dec r5         ;r5 = length -1
-  
-Bubble_Sort_In_Loop:
-
-
-  ;obtem vec[j]
-  add r2, r0, r5    ; r2 = posicao de memoria de vec[j]
-  loadi r4, r2      ; r4 = vec[j]   
-  
-  ;obtem vec[j-1]
-  dec r2
-  loadi r3, r2      ;r3 = vec[j-1]
- 
-  push r1           ;empilha r1 e r2, pois
-  push r2           ;deverao ser setados caso haja swap()
-  
-  mov r1, r5       ;r1 = posicao j
-  mov r2, r1
-  dec r2           ;r1 = posicao j-1
-  ;compara vec[j-1] > vec[j]
-  cmp r3, r4
-  ;troca se r3 > r4 (vec[j-1] > vec[j])
-  cgr SwapVectorElement  ;r0->vector, r1->pos1, r2->pos2
-  
-  pop r2          ;recupera os valores de r2 e r1, pois
-  pop r1	  ;swap() já pode ter usado esses registradores
-  
-  
-
-  ;verifica condicao para loop interno
-  dec r5          ;decrementa contador do loop interno
-  inc r6          ;incrementa contador externo só pra ser comparado
-  cmp r5, r6      ;comparacao do loop interno se j > i + 1
-  dec r6          ;recupera o valor atual do contador do loop externo
-  jeg Bubble_Sort_In_Loop ;se contador interno é valido (j > i + 1), continua
-  
-  ;verifica condicao para loop externo
-  inc r6          ;incrementa o contador do loop externo
-  cmp r6, r1      ;compara contador do loop externo com o tamano do vetor
-  jle Bubble_Sort_Out_Loop ;se i <= tamanho_vetor continua o loop externo
- 
-  pop r6
-  pop r5
-  pop r4
-  pop r3
-  pop r2
-  
-  rts
-  
   
 ;********************************PRINT VECTOR***************************/
 PrintVector:   ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
 
-  loadn r4, #' '  ;espaco que servira como separador entre os elementos
+  loadn r4, #','  ;espaco que servira como separador entre os elementos
   loadn r5, #0    ;r5 -> contador: conta os elementos que estao sendo impressos
   loadn r6, #48   ;correcao para imprimir o numero como caracter, pois 0 = 48
 
@@ -306,6 +325,42 @@ SwapVectorElement: ;r0->vector, r1->pos1, r2->pos2
   rts
   
   
+  
+;**********************Copy Vector*************************
+Vectorcpy:  ;copia o vetor-> r0->vector1, r1->length r2->vetor destino
+;r4->indice
+;r5 -> &vecx[i]
+;r6->vec1[i]
+
+
+ ;empilha os registradore
+  push r4
+  push r5
+  
+  loadn r4, #0  ;i = indice
+  
+  
+Vectorcpy_Loop:  
+ 
+  add r5, r0, r4     ;r5 = &vect1[i]
+  loadi r6, r5       ;r6 = &vect1[i]
+  add r5, r2, r4    ;r5 = &vect2[i]
+  storei r5, r6      ;conteudo apontado por r5 = conteudo de r6
+  inc r4
+  cmp r4, r1
+  jle Vectorcpy_Loop
+  
+Vectorcpy_End:
+
+
+  ;desimpilha os registradores
+  pop r5
+  pop r4
+
+  
+  rts
+  
+  
 ;************************IMPRIME STRING*********************************
 
 ImprimeString:  ;r1->posicao inicial da string, r0-> posicao inicial da tela, devolve r6 com ultima posicao impressa
@@ -344,5 +399,20 @@ ImprimeString_Sai:
   
   rts
   
+;***************** Imprime Vetor invalido
+ImprimeVetorInvalido:
+
+  loadn r1, #msg3
+  loadn r0, #0
+  call ImprimeString  
   
+  pop r2
+  pop r1
+  
+  halt   ;encerrao execucao
+  
+  
+	
+	
+
   
