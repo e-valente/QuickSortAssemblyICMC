@@ -1,3 +1,20 @@
+;T1 - Organização de Computadores
+;QuickSort recursivo - Assembly ICMC
+;Turma2 - Grupo5
+;
+;
+;
+;Alunos: 
+;Bruno Azenha 
+;Emanuel Valente
+;Vinícius Katata
+;
+;Info:
+;O algorimto quicksort aqui implementado, basea-se na seguinte
+;implementacao na linguagem C, disponível em:
+;https://github.com/lbull/QuickSortAssemblyICMC/blob/master/quicksort.c
+;
+
 jmp main
 
 ; ------ Programa Principal -----------
@@ -27,6 +44,11 @@ main:
 	pop r2       	 ;r2 agora tem o tamanho do vetor
 	push r2     	 ;empilha o tamanho do vetor pra ser usado no futuro      
 	dec r2           ;decrementamos de 1, pois o quicksort conta o elemento de indice zero
+	
+	;tamanho do vetor
+	;essa instrucao pode ser comentada
+	;caso queira obter o tamanho retornado da rotina SetVector
+	loadn r2, #11    ;tamanho do vetor (tam -1)
 	;loadn r2, #21   ;descomente essa instrucao pra rotina gerar um erro (max elem permitidos)
 	call QuickSort    ;r0->vector, r1->left, r2->right  retorna vetor ordenado em r7
 	
