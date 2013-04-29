@@ -22,11 +22,6 @@ jmp main
 msg1: string "Vetor sem ordenar: "
 msg2: string "Vetor ordenado: "
 msg3: string "Vetor invalido! (max 20 elementos)"
-;msg1: string "Digite a primeira string: "
-;msg2: string "Digite a segunda string: "
-;msg3: string "Resultado: "
-;str1: var #40
-str2: var #40
 vec1: var #40
 vec2: var #40
 
@@ -155,7 +150,7 @@ QuickSort: ;r0->vector, r1->left, r2->right  retorna vetor ordenado em r7
   sub r1, r2, r1         ;r1 terá o tamanho do vetor
   inc r1
   loadn r2, #vec2         ;r2 posicao do vetor destino
-  call Vectorcpy  ;copia o vetor-> r0->vector1, r1->length r2->vetor destino
+  call Vectorcpy          ;copia o vetor-> r0->vector1, r1->length r2->vetor destino
   
   mov r3, r2              ;r2 recebe uma copia (bk) do tamanho do vetor
   
@@ -204,8 +199,7 @@ QuickSort_out:
  
   
   
-  
-
+ 
 Partition: ;r0->vector, r1->left, r2->right; retorna cuttof em r7
 ;r3->i
 ;r4->j
@@ -213,6 +207,7 @@ Partition: ;r0->vector, r1->left, r2->right; retorna cuttof em r7
 ;r5->vect[j]
 ;r7->tmp
 
+  ;empilhando os registradores
   push r3
   push r4
   push r5
@@ -261,18 +256,18 @@ IncSwapPartition_out:
   jmp Partition_final
 
   
-IncSwapPartition_in:
-  inc r3
+IncSwapPartition_in:  
+  inc r3                   ;i++
   
-  push r1
+  push r1                  ;usaremos r1 e r2 na swap()
   push r2
   
-  mov r1, r3
-  mov r2, r4
+  mov r1, r3               ;r1 = i
+  mov r2, r4               ;r2 = j
   
-  call SwapVectorElement 
+  call SwapVectorElement ;r0->vector, r1->pos1, r2->pos2
   
-  pop r2
+  pop r2                  ;recuperamos r2 e r1 (right e left)
   pop r1
   
   jmp IncSwapPartition_out
