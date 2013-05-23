@@ -43,7 +43,7 @@ main:
 	;tamanho do vetor
 	;essa instrucao pode ser comentada
 	;caso queira obter o tamanho retornado da rotina SetVector
-	loadn r2, #11    ;tamanho do vetor (tam -1)
+	;loadn r2, #11    ;tamanho do vetor (tam -1)
 	;loadn r2, #21   ;descomente essa instrucao pra rotina gerar um erro (max elem permitidos)
 	call QuickSort    ;r0->vector, r1->left, r2->right  retorna vetor ordenado em r7
 	
@@ -93,29 +93,33 @@ SetVector:   ;cria o vetor e retorna em r7 seu tamanho
 
   loadn r7, #0         ;contador do nro de elementos
   
-  static vec1 + #0, #5   ;armazena 5 na posicao 0 (zero) do vetor
+  static vec1 + #0, #50   ;armazena 5 na posicao 0 (zero) do vetor
   inc r7                 ;incrementa contador de elementos
   static vec1 + #1, #4   ;armazena 4 na posicao 1 (zero) do vetor and so forth
   inc r7
-  static vec1 + #2, #5
+  static vec1 + #2, #5672
   inc r7
   static vec1 + #3, #9
   inc r7
-  static vec1 + #4, #1
+  static vec1 + #4, #122
   inc r7
-  static vec1 + #5, #8
+  static vec1 + #5, #9999
   inc r7
-  static vec1 + #6, #3
+  static vec1 + #6, #0
   inc r7
-  static vec1 + #7, #7
+  static vec1 + #7, #723
   inc r7
-  static vec1 + #8, #2
+  static vec1 + #8, #2676
   inc r7
-  static vec1 + #9, #3
+  static vec1 + #9, #333
   inc r7
-  static vec1 + #10, #1
+  static vec1 + #10, #1123
   inc r7
-  static vec1 + #11, #6
+  static vec1 + #11, #0
+  inc r7
+  static vec1 + #12, #0
+  inc r7
+  static vec1 + #13, #1
   inc r7
   
   rts
@@ -291,21 +295,28 @@ PrintVector:   ;r0-> vetor, r1->tamanho ;r2->posicao inicial da tela
 
   loadn r4, #','  ;espaco que servira como separador entre os elementos
   loadn r5, #0    ;r5 -> contador: conta os elementos que estao sendo impressos
-  loadn r6, #48   ;correcao para imprimir o numero como caracter, pois 0 = 48
+  loadn r6, #0    ;numero de digitos impressos pela funcao PrintInteger
   loadn r7, #' '  ;espaco pra tirar a virgula da ultima posicao do vetor
 
 PrintVector_Loop:
   loadi r3, r0    ;carrega conteudo de r0 em r3 (r0 é ponteiro pro vetor)
-  add r3, r3, r6  ;soma 48 pra imprimir como caractere
-  outchar r3, r2  ;imprime o caractere
-  inc r2          ;incrementa posicao da tela
+  
+  push r0     ;pois será usado por PrintInteger
+  push r1     ;pois será usado por PrintInteger
+  mov r0, r3
+  mov r1, r2
+  call PrintInteger   ;r0->numero, r1->pos, devolve em r6 o numero de digitos impressos
+  pop r1
+  pop r0
+  
+  
+  add r2, r2, r6
   outchar r4, r2  ;imprime virgula
   inc r0	  ;incrementa posicao do vetor
   inc r2          ;incrementa posicao da tela
   inc r5          ;incrementa contador dos elementos impressos
   cmp r5, r1      ;compara se nao chegou ao fim do vetor
   jne PrintVector_Loop ;se nao chegou ao fim continua imprimindo
-  
   dec r2          ;decrementa posicao da tela
   outchar r7, r2  ;imprime imprime espaco depois da ultima posicao
   
@@ -433,7 +444,104 @@ ImprimeVetorInvalido:
   halt   ;encerrao execucao
   
   
-	
-	
-
   
+;*************Imprime inteiro************  
+PrintInteger: ;ro-> numero r1->posicao; retorna r6 número de digitos do numero 
+
+  ;empilha (=protege) o estado atual dos registradores
+  push r0	;empilho r0 (numero a ser impresso)
+  push r1	;empilho r1 (posicao do video)
+  push r2	;empilha r2, pois será usado para guardarmos o 
+		;frame da pilha
+  push r3	;empilha r3, pois será usado como variavel 
+		;auxiliar (operacao mod e durante a conversao pra ascii)
+  push r4	;empilha r4, pois será usado como variavel auxiliar que 
+		;conterá o valor atualizado após a operacao mod
+  push r5       ;empilha r5, que o conteudo de sp atual  para ser comparado com frame 
+   
+   
+   ;se o numero for zero imprimimos e retornamos
+   loadn r2, #0
+   cmp r0, r2        
+   jne PrintInteger_Init
+   loadn r3, #48    ;ascii	
+   add r2, r2, r3
+   outchar r2, r1   ;imprime o zero na posicao r1
+   ;imprimi só uma posicao 
+   ;entao retorna 1 em r6
+   loadn r6, #1
+   
+   pop r5
+   pop r4
+   pop r3
+   pop r2
+   pop r1
+   pop r0
+  
+   rts  
+   
+   
+   
+   
+PrintInteger_Init:  
+  ;copia conteudo de sp para r2 para termos o controle da pilha
+  ;r2 terá o status da pilha antes da execucao da subrotina
+  ;ou seja, usaremos para saber o estado da pilha antes de 
+  ;empilharmos os digitos. Uma outra maneira seria ter uma 
+  ;variavel pra controlar o status da pilha (pelos pushes e pops).
+  ;Da maneira aqui descrita é mais elegante, pois sp incrementa/decrementa 
+  ;automatico qdo demos push/pop
+  mov r2, sp	;copia conteudo de sp em r2
+  loadn r6, #0
+  
+Loop_Compare:
+
+  loadn r3, #0		;r3 conterá zero, pois será comparado com o 
+			;numero a ser impresso a cada iteracao do loop
+  cmp r0, r3		;r0==r3?
+  jeq Loop_PrintInteger ;acabamos de empilhar os digitos?, 
+			;se sim, chamamos o bloco para imprimir
+  
+  ;se houver mais digitos a serem impressos 
+  ;continua aqui embaixo para empilharmos
+  
+  loadn r3, #10		; r3 conterá 10 para ser usado na 
+			;operacao "mode" (resto da divisao)
+  mod r4, r0, r3	;r4 = r0%r3 => r4 = numero%10. R4 conterá o resto da divisao, que sera o digito atual da iteracao.
+  div r0, r0, r3	;r0 = r0/r3 divide nosso numero de entrada por 10 (ex: 541 => 54,1 => 54 (int)) pra buscar o proximo digito
+			;Note que a cada iteracao nosso numero vai diminuindo de um algarismo
+  loadn r3, #48		;r3=48, pois devera somado ao digito pra conversao ascii
+  add r4, r4, r3	;atualiza o conteudo apontado por r4 é tal que r4 = r4 + r3 => r4 = r4 + 48
+  push r4		;Empilha nosso digito (conteudo de r4). Esse push guardará os digitos da direita para esquerda
+  
+  jmp Loop_Compare	;retorna ao inicio do label para "buscar" 
+			;mais digitos
+  
+  
+Loop_PrintInteger:
+  
+  mov r5, sp		;Precisamos saber o estado da pilha (qtos digitos foram empilhados) 
+			;r5 terá o conteudo de sp para ser comparado 
+			;com frame (r2) (estado inicial)
+  cmp r5, r2		;sp == frame?, ou seja, acabaram os digitos da 
+			;pilha? (pilha chegou a seu estado inicial?)
+  jeq Exit_PrintInteger ;se acabaram sai da subrotina, senao imprime
+  
+  pop r4		;retira o digito da pilha: a ordem é do mais significativo (da "esquerda") pra o menos
+		
+  outchar r4, r1	;imprime o digito que esta armazenado em r4 na posicao armazenada em r1
+  inc r6
+  
+  inc r1		;increenta a posicao do video pra imprimir
+  jmp Loop_PrintInteger ;continua o loop até acabarem os digitos
+ 
+ Exit_PrintInteger:
+
+  pop r5
+  pop r4
+  pop r3
+  pop r2
+  pop r1
+  pop r0
+  
+  rts  
